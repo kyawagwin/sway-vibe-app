@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Cloud, CloudRain, Moon, Sun } from "lucide-react";
+import { Cloud, CloudRain, Moon, Sun, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WeatherState } from "./LiquidBackground";
 
@@ -12,6 +12,8 @@ interface AtmosphericHeaderProps {
     temperature: number;
     currentVibe: VibeType;
     onVibeChange: (vibe: VibeType) => void;
+    onToggleVault: () => void;
+    hasNewItem: boolean;
 }
 
 const WeatherIcon = ({ state }: { state: WeatherState }) => {
@@ -33,6 +35,8 @@ export function AtmosphericHeader({
     temperature,
     currentVibe,
     onVibeChange,
+    onToggleVault,
+    hasNewItem
 }: AtmosphericHeaderProps) {
     const vibes: VibeType[] = ["Solo", "Family", "Group"];
 
@@ -55,29 +59,42 @@ export function AtmosphericHeader({
                 </span>
             </div>
 
-            {/* Vibe Toggle */}
-            <div className="flex p-1 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full shadow-lg">
-                {vibes.map((vibe) => (
-                    <button
-                        key={vibe}
-                        onClick={() => onVibeChange(vibe)}
-                        className={cn(
-                            "relative px-4 py-1.5 text-xs font-semibold rounded-full transition-colors duration-300 outline-none",
-                            currentVibe === vibe
-                                ? "text-slate-800 shadow-sm"
-                                : "text-white/70 hover:text-white"
-                        )}
-                    >
-                        {currentVibe === vibe && (
-                            <motion.div
-                                layoutId="vibe-pill"
-                                className="absolute inset-0 bg-white/90 rounded-full -z-10"
-                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                            />
-                        )}
-                        <span className="relative z-10 drop-shadow-sm">{vibe}</span>
-                    </button>
-                ))}
+            <div className="flex items-center gap-3">
+                {/* Vibe Toggle */}
+                <div className="flex p-1 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full shadow-lg">
+                    {vibes.map((vibe) => (
+                        <button
+                            key={vibe}
+                            onClick={() => onVibeChange(vibe)}
+                            className={cn(
+                                "relative px-4 py-1.5 text-xs font-semibold rounded-full transition-colors duration-300 outline-none",
+                                currentVibe === vibe
+                                    ? "text-slate-800 shadow-sm"
+                                    : "text-white/70 hover:text-white"
+                            )}
+                        >
+                            {currentVibe === vibe && (
+                                <motion.div
+                                    layoutId="vibe-pill"
+                                    className="absolute inset-0 bg-white/90 rounded-full -z-10"
+                                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                />
+                            )}
+                            <span className="relative z-10 drop-shadow-sm">{vibe}</span>
+                        </button>
+                    ))}
+                </div>
+
+                {/* Vault Toggle Button */}
+                <button
+                    onClick={onToggleVault}
+                    className="relative p-2.5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full shadow-lg hover:bg-white/20 transition-colors"
+                >
+                    <Bookmark className="w-5 h-5 text-white drop-shadow-md" />
+                    {hasNewItem && (
+                        <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 border-2 border-slate-900 rounded-full animate-pulse" />
+                    )}
+                </button>
             </div>
         </motion.header>
     );

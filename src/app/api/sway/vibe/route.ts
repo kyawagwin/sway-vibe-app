@@ -102,7 +102,8 @@ export async function GET(request: Request) {
         const itemsDraft = placesWithPhotos.map((place: GooglePlace) => ({
             id: place.id,
             headline: place.displayName.text,
-            imageUrl: `https://places.googleapis.com/v1/${place.photos![0].name}/media?maxHeightPx=800&maxWidthPx=800&key=${PLACES_API_KEY}`,
+            // Point to our secure proxy endpoint instead of leaking the API key
+            imageUrl: `/api/sway/image?name=${encodeURIComponent(place.photos![0].name)}`,
             pitch: "" // to be generated
         }));
 
