@@ -1,65 +1,83 @@
-import Image from "next/image";
+"use client";
+
+import { LiquidBackground } from "@/components/ui/LiquidBackground";
+import { AtmosphericHeader } from "@/components/ui/AtmosphericHeader";
+import { HeroCard } from "@/components/ui/HeroCard";
+import { PulseLoader } from "@/components/ui/PulseLoader";
+import { OfflineFallbackCard } from "@/components/ui/OfflineFallbackCard";
+import { useSwayState } from "@/hooks/useSwayState";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Home() {
+  const {
+    vibe,
+    weatherState,
+    handleVibeChange,
+    cycleWeather,
+    currentItem,
+    handleSwipe,
+    isLoading,
+    isOffline,
+  } = useSwayState();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="relative min-h-screen w-full overflow-hidden text-slate-900 font-sans">
+      {/* 1. Underlying Liquid Morph Background */}
+      <LiquidBackground weatherState={weatherState} />
+
+      {/* 2. Glass Header layer */}
+      <AtmosphericHeader
+        weatherState={weatherState}
+        temperature={Math.random() * 30 + 50} // Mock temperature between 50 and 80
+        currentVibe={vibe}
+        onVibeChange={handleVibeChange}
+      />
+
+      {/* 3. Content Layer (Cards, Loaders, Offline Fallback) */}
+      <div className="relative pt-24 h-screen w-full flex items-center justify-center pointer-events-none">
+        {/* pointer-events-auto re-enables interaction only on the card area */}
+        <div className="relative w-full h-full max-h-[800px] pointer-events-auto">
+          <AnimatePresence mode="wait">
+            {isOffline ? (
+              <motion.div
+                key="offline"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <OfflineFallbackCard onRetry={() => window.location.reload()} />
+              </motion.div>
+            ) : isLoading || !currentItem ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <PulseLoader />
+              </motion.div>
+            ) : (
+              <HeroCard
+                key={currentItem.id} // Re-render animation when item swaps
+                data={currentItem}
+                index={0}
+                onSwipe={handleSwipe}
+              />
+            )}
+          </AnimatePresence>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </div>
+
+      {/* Dev Mode Only: Weather Toggle */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <button
+          onClick={cycleWeather}
+          title="Dev Mode: Force Weather State"
+          className="p-3 bg-black/60 hover:bg-black text-white rounded-full shadow-2xl backdrop-blur-md text-xs font-mono uppercase tracking-widest border border-white/10 transition-colors"
+        >
+          {weatherState}
+        </button>
+      </div>
+    </main>
   );
 }
