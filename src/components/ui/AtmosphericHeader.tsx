@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Cloud, CloudRain, Moon, Sun, Bookmark } from "lucide-react";
+import { Cloud, CloudRain, Moon, Sun, Bookmark, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WeatherState } from "./LiquidBackground";
 
@@ -13,6 +13,7 @@ interface AtmosphericHeaderProps {
     currentVibe: VibeType;
     onVibeChange: (vibe: VibeType) => void;
     onToggleVault: () => void;
+    onOpenTutorial: () => void;
     hasNewItem: boolean;
 }
 
@@ -36,6 +37,7 @@ export function AtmosphericHeader({
     currentVibe,
     onVibeChange,
     onToggleVault,
+    onOpenTutorial,
     hasNewItem
 }: AtmosphericHeaderProps) {
     const vibes: VibeType[] = ["Solo", "Family", "Group"];
@@ -84,6 +86,15 @@ export function AtmosphericHeader({
                         </button>
                     ))}
                 </div>
+
+                {/* Help Toggle Button */}
+                <button
+                    onClick={onOpenTutorial}
+                    className="relative p-2.5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full hover:bg-white/20 transition-colors"
+                    title="How to use Sway"
+                >
+                    <HelpCircle className="w-5 h-5 text-white/80" />
+                </button>
 
                 {/* Vault Toggle Button */}
                 <button

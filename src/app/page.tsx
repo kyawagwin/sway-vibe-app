@@ -21,6 +21,11 @@ const ZenWalkOverlay = dynamic(
   { ssr: false }
 );
 
+const OnboardingTutorial = dynamic(
+  () => import("@/components/ui/OnboardingTutorial").then((mod) => mod.OnboardingTutorial),
+  { ssr: false }
+);
+
 export default function Home() {
   const {
     vibe,
@@ -45,6 +50,16 @@ export default function Home() {
   } = useSwayVault();
 
   const [zenWalkItem, setZenWalkItem] = useState<HeroCardData | null>(null);
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  useEffect(() => {
+    // Check if this is the user's first time on mount
+    const hasSeenTutorial = localStorage.getItem('sway_tutorial_seen');
+    if (!hasSeenTutorial) {
+      setShowTutorial(true);
+      localStorage.setItem('sway_tutorial_seen', 'true');
+    }
+  }, []);
 
   return (
     <main className="relative min-h-screen w-full overflow-hidden text-slate-900 font-sans">
@@ -58,6 +73,7 @@ export default function Home() {
         currentVibe={vibe}
         onVibeChange={handleVibeChange}
         onToggleVault={toggleVault}
+        onOpenTutorial={() => setShowTutorial(true)}
         hasNewItem={hasNewItem}
       />
 
@@ -130,6 +146,12 @@ export default function Home() {
           headline={zenWalkItem.headline}
         />
       )}
+
+      {/* 6. Onboarding Tutorial */}
+      <OnboardingTutorial
+        isOpen={showTutorial}
+        onClose={() => setShowTutorial(false)}
+      />
     </main>
   );
 }
