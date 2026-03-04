@@ -31,18 +31,49 @@ const searchQueries: Record<WeatherState, Record<VibeType, string[]>> = {
     }
 };
 
+interface GooglePlace {
+    id: string;
+    displayName: { text: string };
+    photos?: { name: string }[];
+}
+
+interface GeminiPitch {
+    id: string;
+    pitch: string;
+}
+
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const vibe = (searchParams.get("vibe") || "Solo") as VibeType;
         const weather = (searchParams.get("weather") || "Clear") as WeatherState;
 
+        const lat = searchParams.get("lat");
+        const lng = searchParams.get("lng");
+
         // 1. Pick a random search query
         const baseQueries = searchQueries[weather]?.[vibe] || searchQueries.Clear.Solo;
         const randomQuery = baseQueries[Math.floor(Math.random() * baseQueries.length)];
-        const textQuery = `${randomQuery} in New York`; // Defaulting to NY for rich results
+        const textQuery = lat && lng ? randomQuery : `${randomQuery} in New York`; // Defaulting to NY if no location
 
         // 2. Call Google Places API
+        const placesReqBody: Record<string, unknown> = {
+            textQuery,
+            pageSize: 5 // Get up to 5 places
+        };
+
+        if (lat && lng) {
+            placesReqBody.locationBias = {
+                circle: {
+                    center: {
+                        latitude: parseFloat(lat),
+                        longitude: parseFloat(lng)
+                    },
+                    radius: 20000.0 // 20km radius
+                }
+            };
+        }
+
         const placesRes = await fetch("https://places.googleapis.com/v1/places:searchText", {
             method: "POST",
             headers: {
@@ -50,10 +81,7 @@ export async function GET(request: Request) {
                 "X-Goog-FieldMask": "places.id,places.displayName,places.photos",
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                textQuery,
-                pageSize: 5 // Get up to 5 places
-            })
+            body: JSON.stringify(placesReqBody)
         });
 
         if (!placesRes.ok) {
@@ -61,26 +89,26 @@ export async function GET(request: Request) {
         }
 
         const placesData = await placesRes.json();
-        const places = placesData.places || [];
+        const places: GooglePlace[] = placesData.places || [];
 
         // Filter places that actually have photos
-        const placesWithPhotos = places.filter((p: any) => p.photos && p.photos.length > 0);
+        const placesWithPhotos = places.filter((p: GooglePlace) => p.photos && p.photos.length > 0);
 
         if (placesWithPhotos.length === 0) {
             throw new Error("No places with photos found");
         }
 
         // 3. Extract basic info
-        const itemsDraft = placesWithPhotos.map((place: any) => ({
+        const itemsDraft = placesWithPhotos.map((place: GooglePlace) => ({
             id: place.id,
             headline: place.displayName.text,
-            imageUrl: `https://places.googleapis.com/v1/${place.photos[0].name}/media?maxHeightPx=800&maxWidthPx=800&key=${PLACES_API_KEY}`,
+            imageUrl: `https://places.googleapis.com/v1/${place.photos![0].name}/media?maxHeightPx=800&maxWidthPx=800&key=${PLACES_API_KEY}`,
             pitch: "" // to be generated
         }));
 
         // 4. Generate pitches with Gemini in one go
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        const placesListString = itemsDraft.map((item: any) => `- ${item.headline}`).join("\\n");
+        const placesListString = itemsDraft.map((item) => `- ${item.headline}`).join("\n");
 
         const prompt = `You are a sophisticated AI concierge for a minimalist travel app. 
 The user is looking for a place matching vibe="${vibe}" and weather="${weather}".
@@ -98,12 +126,17 @@ Output exactly a JSON array of objects, with each object having "id" (matching t
             }
         });
 
-        const responseText = geminiRes.response.text();
-        const pitches = JSON.parse(responseText);
+        let responseText = geminiRes.response.text();
+        // Harden parser against markdown backticks if Gemini ignores the prompt
+        if (responseText.startsWith("```")) {
+            responseText = responseText.replace(/```(json)?/g, "").trim();
+        }
+
+        const pitches: GeminiPitch[] = JSON.parse(responseText);
 
         // 5. Merge pitches back
-        const finalItems = itemsDraft.map((item: any) => {
-            const foundPitch = pitches.find((p: any) => p.id === item.headline);
+        const finalItems = itemsDraft.map((item) => {
+            const foundPitch = pitches.find((p: GeminiPitch) => p.id === item.headline);
             return {
                 ...item,
                 pitch: foundPitch?.pitch || "A quietly beautiful spot perfectly matching your energy right now."
@@ -117,7 +150,7 @@ Output exactly a JSON array of objects, with each object having "id" (matching t
             { items: shuffled },
             {
                 headers: {
-                    "Cache-Control": "no-store", // Don't cache heavily as we randomize heavily and use live AI
+                    "Cache-Control": "s-maxage=3600, stale-while-revalidate=86400", // Cache at edge for 1 hour
                 },
                 status: 200,
             }

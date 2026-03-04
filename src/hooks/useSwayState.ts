@@ -1,5 +1,5 @@
 import useSWR from "swr";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { WeatherState } from "@/components/ui/LiquidBackground";
 import type { VibeType } from "@/components/ui/AtmosphericHeader";
 import type { HeroCardData } from "@/components/ui/HeroCard";
@@ -10,9 +10,32 @@ export function useSwayState() {
     const [vibe, setVibe] = useState<VibeType>("Solo");
     const [weatherState, setWeatherState] = useState<WeatherState>("Clear");
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [coords, setCoords] = useState<{ lat: number, lng: number } | null>(null);
+
+    useEffect(() => {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setCoords({
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    });
+                },
+                (error) => {
+                    console.warn("Geolocation denied or error:", error);
+                }
+            );
+        }
+    }, []);
+
+    const params = new URLSearchParams({ vibe, weather: weatherState });
+    if (coords) {
+        params.append("lat", coords.lat.toString());
+        params.append("lng", coords.lng.toString());
+    }
 
     const { data, error, isLoading, isValidating } = useSWR<{ items: HeroCardData[] }>(
-        `/api/sway/vibe?vibe=${vibe}&weather=${weatherState}`,
+        `/api/sway/vibe?${params.toString()}`,
         fetcher,
         {
             revalidateOnFocus: false, // Don't trigger harsh reloads on tab focus
@@ -25,7 +48,7 @@ export function useSwayState() {
         setCurrentIndex(0); // Reset stack on vibe change
     }, []);
 
-    const handleSwipe = useCallback((_direction: "left" | "right") => {
+    const handleSwipe = useCallback(() => {
         if (data?.items) {
             // Cycle through the items
             setCurrentIndex((prev) => (prev + 1) % data.items.length);

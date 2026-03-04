@@ -87,7 +87,10 @@ export function HeroCard({ data, onSwipe, index }: HeroCardProps) {
                     </div>
 
                     <div className="flex justify-center mt-4 shrink-0">
-                        <button className="flex items-center gap-2 px-8 py-3.5 bg-white/90 hover:bg-white text-slate-900 rounded-full shadow-lg transition-transform transform active:scale-95 duration-200">
+                        <button
+                            onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${data.id}`, '_blank')}
+                            className="flex items-center gap-2 px-8 py-3.5 bg-white/90 hover:bg-white text-slate-900 rounded-full shadow-lg transition-transform transform active:scale-95 duration-200"
+                        >
                             <Navigation className="w-5 h-5" />
                             <span className="font-semibold text-sm tracking-wide">SWAY NOW</span>
                         </button>
