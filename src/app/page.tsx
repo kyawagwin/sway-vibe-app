@@ -3,10 +3,11 @@
 import { useState, useEffect } from "react";
 import { LiquidBackground } from "@/components/ui/LiquidBackground";
 import { AtmosphericHeader } from "@/components/ui/AtmosphericHeader";
-import { HeroCard } from "@/components/ui/HeroCard";
+import { HeroCard, HeroCardData } from "@/components/ui/HeroCard";
 import { PulseLoader } from "@/components/ui/PulseLoader";
 import { OfflineFallbackCard } from "@/components/ui/OfflineFallbackCard";
 import { VaultOverlay } from "@/components/ui/VaultOverlay";
+import { ZenWalkOverlay } from "@/components/ui/ZenWalkOverlay";
 import { useSwayState } from "@/hooks/useSwayState";
 import { useSwayVault } from "@/hooks/useSwayVault";
 import { motion, AnimatePresence } from "framer-motion";
@@ -34,9 +35,12 @@ export default function Home() {
   } = useSwayVault();
 
   const [temperature, setTemperature] = useState(65);
+  const [zenWalkItem, setZenWalkItem] = useState<HeroCardData | null>(null);
 
   useEffect(() => {
-    setTemperature(Math.round(Math.random() * 30 + 50));
+    setTimeout(() => {
+      setTemperature(Math.round(Math.random() * 30 + 50));
+    }, 0);
   }, []);
 
   return (
@@ -88,6 +92,7 @@ export default function Home() {
                   }
                   handleSwipe();
                 }}
+                onZenWalk={setZenWalkItem}
               />
             )}
           </AnimatePresence>
@@ -112,6 +117,16 @@ export default function Home() {
         savedItems={savedItems}
         onRemoveItem={removeItem}
       />
+      {/* 5. Zen Walk AR Compass */}
+      {zenWalkItem && (
+        <ZenWalkOverlay
+          isOpen={!!zenWalkItem}
+          onClose={() => setZenWalkItem(null)}
+          targetLat={zenWalkItem.targetLat}
+          targetLng={zenWalkItem.targetLng}
+          headline={zenWalkItem.headline}
+        />
+      )}
     </main>
   );
 }

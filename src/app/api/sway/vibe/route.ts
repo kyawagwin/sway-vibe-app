@@ -35,6 +35,7 @@ interface GooglePlace {
     id: string;
     displayName: { text: string };
     photos?: { name: string }[];
+    location?: { latitude: number; longitude: number };
 }
 
 interface GeminiPitch {
@@ -78,7 +79,7 @@ export async function GET(request: Request) {
             method: "POST",
             headers: {
                 "X-Goog-Api-Key": PLACES_API_KEY,
-                "X-Goog-FieldMask": "places.id,places.displayName,places.photos",
+                "X-Goog-FieldMask": "places.id,places.displayName,places.photos,places.location",
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(placesReqBody)
@@ -91,11 +92,11 @@ export async function GET(request: Request) {
         const placesData = await placesRes.json();
         const places: GooglePlace[] = placesData.places || [];
 
-        // Filter places that actually have photos
-        const placesWithPhotos = places.filter((p: GooglePlace) => p.photos && p.photos.length > 0);
+        // Filter places that actually have photos and location
+        const placesWithPhotos = places.filter((p: GooglePlace) => p.photos && p.photos.length > 0 && p.location);
 
         if (placesWithPhotos.length === 0) {
-            throw new Error("No places with photos found");
+            throw new Error("No valid places found");
         }
 
         // 3. Extract basic info
@@ -104,7 +105,9 @@ export async function GET(request: Request) {
             headline: place.displayName.text,
             // Point to our secure proxy endpoint instead of leaking the API key
             imageUrl: `/api/sway/image?name=${encodeURIComponent(place.photos![0].name)}`,
-            pitch: "" // to be generated
+            pitch: "", // to be generated
+            targetLat: place.location!.latitude,
+            targetLng: place.location!.longitude
         }));
 
         // 4. Generate pitches with Gemini in one go

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useMotionValue, useTransform, useAnimation, PanInfo } from "framer-motion";
-import { Navigation, Heart, X } from "lucide-react";
+import { Navigation, Heart, X, Compass } from "lucide-react";
 import Image from "next/image";
 
 export interface HeroCardData {
@@ -9,15 +9,18 @@ export interface HeroCardData {
     imageUrl: string;
     headline: string;
     pitch: string;
+    targetLat: number;
+    targetLng: number;
 }
 
 interface HeroCardProps {
     data: HeroCardData;
     onSwipe: (direction: "left" | "right", item: HeroCardData) => void;
+    onZenWalk?: (item: HeroCardData) => void;
     index: number;
 }
 
-export function HeroCard({ data, onSwipe, index }: HeroCardProps) {
+export function HeroCard({ data, onSwipe, onZenWalk, index }: HeroCardProps) {
     const x = useMotionValue(0);
     const controls = useAnimation();
 
@@ -109,14 +112,24 @@ export function HeroCard({ data, onSwipe, index }: HeroCardProps) {
                         </p>
                     </div>
 
-                    <div className="flex justify-center mt-4 shrink-0">
+                    <div className="flex justify-center items-center gap-4 mt-4 shrink-0">
                         <button
                             onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=Google&query_place_id=${data.id}`, '_blank')}
-                            className="flex items-center gap-2 px-8 py-3.5 bg-white/90 hover:bg-white text-slate-900 rounded-full shadow-lg transition-transform transform active:scale-95 duration-200"
+                            className="flex-1 flex justify-center items-center gap-2 py-3.5 bg-white/90 hover:bg-white text-slate-900 rounded-full shadow-lg transition-transform transform active:scale-95 duration-200"
                         >
                             <Navigation className="w-5 h-5" />
                             <span className="font-semibold text-sm tracking-wide">SWAY NOW</span>
                         </button>
+
+                        {data.targetLat && data.targetLng && onZenWalk && (
+                            <button
+                                onClick={() => onZenWalk(data)}
+                                className="p-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-full shadow-lg backdrop-blur-md transition-transform transform active:scale-95 duration-200"
+                                title="Zen Walk"
+                            >
+                                <Compass className="w-5 h-5" />
+                            </button>
+                        )}
                     </div>
                 </div>
             </motion.div>
