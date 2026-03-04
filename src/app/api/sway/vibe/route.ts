@@ -1,94 +1,139 @@
 import { NextResponse } from "next/server";
 import type { WeatherState } from "@/components/ui/LiquidBackground";
 import type { VibeType } from "@/components/ui/AtmosphericHeader";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export const runtime = "edge";
 
-const mockPlaces = {
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY!;
+
+const searchQueries: Record<WeatherState, Record<VibeType, string[]>> = {
     Clear: {
-        Solo: [
-            { id: "c-s-1", imageUrl: "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?w=800&q=80", headline: "The Highline Path", pitch: "A sun-drenched sanctuary away from the noise. Perfect for clearing your head and feeling the breeze." },
-            { id: "c-s-2", imageUrl: "https://images.unsplash.com/photo-1542282088-fe8426682b8f?w=800&q=80", headline: "Hidden Botanical Gardens", pitch: "Lose yourself among the ancient oaks. A solitary afternoon with nothing but the distant hum of bees." }
-        ],
-        Family: [
-            { id: "c-f-1", imageUrl: "https://images.unsplash.com/photo-1473221326025-9183b464bb7e?w=800&q=80", headline: "Riverside Park", pitch: "Wide open grass and endless sky. Let the kids run wild while you soak up the perfect afternoon sun." },
-            { id: "c-f-2", imageUrl: "https://images.unsplash.com/photo-1533222481259-ce20eda1e20b?w=800&q=80", headline: "The Beach Pavilion", pitch: "Sandcastles and sea spray under a cloudless sky. Memories waiting to be made by the glittering water." }
-        ],
-        Group: [
-            { id: "c-g-1", imageUrl: "https://images.unsplash.com/photo-1533143708019-ea5cfa80213e?w=800&q=80", headline: "Rooftop Terrace Open", pitch: "Cold drinks, warm breeze, and the city stretched out below. The afternoon was made for this company." },
-            { id: "c-g-2", imageUrl: "https://images.unsplash.com/photo-1511895426328-1b6b55fcb512?w=800&q=80", headline: "Lakeside Beer Garden", pitch: "Laughter carrying over the water as the sun begins to dip. Grab a giant pretzel and enjoy the golden hour." }
-        ]
+        Solo: ["quiet botanical garden", "peaceful nature trail", "scenic overlook", "hidden sunlit cafe"],
+        Family: ["large grassy park", "beach pavilion", "family friendly outdoor space", "zoo"],
+        Group: ["rooftop terrace bar", "outdoor beer garden", "lively open air market", "sunlit patio restaurant"],
     },
     Rain: {
-        Solo: [
-            { id: "r-s-1", imageUrl: "https://images.unsplash.com/photo-1544716278-e513176f20b5?w=800&q=80", headline: "The Antiquarian Bookshop", pitch: "The smell of old paper and rain hitting the glass. A quiet corner to lose yourself in another world." },
-            { id: "r-s-2", imageUrl: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80", headline: "Analog Coffee Roasters", pitch: "Watch the world wash away outside while nursing a perfect pour-over. Solitude has never felt so warm." }
-        ],
-        Family: [
-            { id: "r-f-1", imageUrl: "https://images.unsplash.com/photo-1518998053401-a41411304587?w=800&q=80", headline: "Natural History Museum", pitch: "Dodge the downpour among dinosaur bones and ancient mysteries. An afternoon of discovery that ignores the weather entirely." },
-            { id: "r-f-2", imageUrl: "https://images.unsplash.com/photo-1560185011-ea7fedf76711?w=800&q=80", headline: "The Grand Library", pitch: "Vast halls and endless stories to keep the gloom at bay. A cozy, grand shelter for curious minds." }
-        ],
-        Group: [
-            { id: "r-g-1", imageUrl: "https://images.unsplash.com/photo-1516997121675-4c2d1684aa3e?w=800&q=80", headline: "The Underground Arcade", pitch: "Neon lights and vintage cabinets cutting through the gray afternoon. Let the steady drum of rain fade behind the 8-bit noise." },
-            { id: "r-g-2", imageUrl: "https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=800&q=80", headline: "The Velvet Lounge", pitch: "Deep leather booths and excellent cocktails. The perfect moody shelter to wait out the storm with your favorite people." }
-        ]
+        Solo: ["quiet antiquarian bookshop", "cozy independent cafe", "reading room", "small art gallery"],
+        Family: ["natural history museum", "interactive science center", "indoor aquarium", "large public library"],
+        Group: ["underground arcade", "moody cocktail lounge", "indoor food hall", "bowling alley"],
     },
     Cloud: {
-        Solo: [
-            { id: "cl-s-1", imageUrl: "https://images.unsplash.com/photo-1449844908441-8829872d2607?w=800&q=80", headline: "Overlook Trail", pitch: "An overcast sky makes the greens pop. A thoughtful, silent hike with sharp, clean air." },
-        ],
-        Family: [
-            { id: "cl-f-1", imageUrl: "https://images.unsplash.com/photo-1555026909-0091aa4c0e35?w=800&q=80", headline: "The Farmer's Market", pitch: "Beat the heat under a gray sky. Let them pick out fresh berries before the crowds arrive." },
-        ],
-        Group: [
-            { id: "cl-g-1", imageUrl: "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&q=80", headline: "The Outdoor Bazaar", pitch: "Perfect weather for wandering between stalls. Grab some street food and see where the afternoon goes." },
-        ]
+        Solo: ["overcast hiking trail", "brutalist architecture museum", "quiet foggy beach", "tea house"],
+        Family: ["farmers market", "botanical garden conservatory", "spacious indoor playground"],
+        Group: ["outdoor bazaar", "bustling street food market", "brewery with indoor outdoor seating"],
     },
     Night: {
-        Solo: [
-            { id: "n-s-1", imageUrl: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&q=80", headline: "The Observatory", pitch: "Just you and the cosmos tonight. A quiet, humbling perspective away from the city lights." },
-        ],
-        Family: [
-            { id: "n-f-1", imageUrl: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&q=80", headline: "The Plaza Fountain", pitch: "Watch their eyes light up at the water show. A magical end to a long day." },
-        ],
-        Group: [
-            { id: "n-g-1", imageUrl: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=800&q=80", headline: "Midnight Diner", pitch: "Neon signs and late-night ramen. The night is young and the stories are just getting good." },
-        ]
+        Solo: ["quiet observatory", "late night diner", "midnight cafe", "empty city park bench"],
+        Family: ["lit up plaza fountain", "evening carnival", "family friendly dessert spot"],
+        Group: ["neon lit ramen shop", "lively night market", "late night karaoke"],
     }
 };
 
 export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
-    const vibe = (searchParams.get("vibe") || "Solo") as VibeType;
-    const weather = (searchParams.get("weather") || "Clear") as WeatherState;
+    try {
+        const { searchParams } = new URL(request.url);
+        const vibe = (searchParams.get("vibe") || "Solo") as VibeType;
+        const weather = (searchParams.get("weather") || "Clear") as WeatherState;
 
-    // Add artificial delay to simulate API calls to Places & Gemini and trigger the PulseLoader
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+        // 1. Pick a random search query
+        const baseQueries = searchQueries[weather]?.[vibe] || searchQueries.Clear.Solo;
+        const randomQuery = baseQueries[Math.floor(Math.random() * baseQueries.length)];
+        const textQuery = `${randomQuery} in New York`; // Defaulting to NY for rich results
 
-    const items = mockPlaces[weather][vibe];
+        // 2. Call Google Places API
+        const placesRes = await fetch("https://places.googleapis.com/v1/places:searchText", {
+            method: "POST",
+            headers: {
+                "X-Goog-Api-Key": PLACES_API_KEY,
+                "X-Goog-FieldMask": "places.id,places.displayName,places.photos",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                textQuery,
+                pageSize: 5 // Get up to 5 places
+            })
+        });
 
-    if (!items || items.length === 0) {
-        // Fallback
+        if (!placesRes.ok) {
+            throw new Error(`Places API error: ${placesRes.status}`);
+        }
+
+        const placesData = await placesRes.json();
+        const places = placesData.places || [];
+
+        // Filter places that actually have photos
+        const placesWithPhotos = places.filter((p: any) => p.photos && p.photos.length > 0);
+
+        if (placesWithPhotos.length === 0) {
+            throw new Error("No places with photos found");
+        }
+
+        // 3. Extract basic info
+        const itemsDraft = placesWithPhotos.map((place: any) => ({
+            id: place.id,
+            headline: place.displayName.text,
+            imageUrl: `https://places.googleapis.com/v1/${place.photos[0].name}/media?maxHeightPx=800&maxWidthPx=800&key=${PLACES_API_KEY}`,
+            pitch: "" // to be generated
+        }));
+
+        // 4. Generate pitches with Gemini in one go
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const placesListString = itemsDraft.map((item: any) => `- ${item.headline}`).join("\\n");
+
+        const prompt = `You are a sophisticated AI concierge for a minimalist travel app. 
+The user is looking for a place matching vibe="${vibe}" and weather="${weather}".
+Here is a list of places I found:
+${placesListString}
+
+For each place, write a 1-sentence poetic, immersive pitch that makes the user want to go there right now, given the weather and vibe.
+
+Output exactly a JSON array of objects, with each object having "id" (matching the exact name provided) and "pitch". No markdown formatting, just pure JSON array string.`;
+
+        const geminiRes = await model.generateContent({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: {
+                responseMimeType: "application/json",
+            }
+        });
+
+        const responseText = geminiRes.response.text();
+        const pitches = JSON.parse(responseText);
+
+        // 5. Merge pitches back
+        const finalItems = itemsDraft.map((item: any) => {
+            const foundPitch = pitches.find((p: any) => p.id === item.headline);
+            return {
+                ...item,
+                pitch: foundPitch?.pitch || "A quietly beautiful spot perfectly matching your energy right now."
+            };
+        });
+
+        // 6. Return to client
+        const shuffled = [...finalItems].sort(() => 0.5 - Math.random());
+
+        return NextResponse.json(
+            { items: shuffled },
+            {
+                headers: {
+                    "Cache-Control": "no-store", // Don't cache heavily as we randomize heavily and use live AI
+                },
+                status: 200,
+            }
+        );
+
+    } catch (error) {
+        console.error("Live API Error:", error);
+
+        // Fallback to exactly one mock place to prevent UI break
         return NextResponse.json({
             items: [{
-                id: "fallback",
+                id: "fallback-" + Date.now(),
                 imageUrl: "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?w=800&q=80",
-                headline: "Somewhere Special",
-                pitch: "The stars have aligned for a perfect moment, regardless of the weather."
+                headline: "The Reserve",
+                pitch: "The algorithms are sleeping, but this hand-picked sanctuary is quietly waiting for you."
             }]
-        });
+        }, { status: 200 });
     }
-
-    // To simulate "infinite" swiping, we shuffle and duplicate the array if there are only a few items
-    const shuffled = [...items].sort(() => 0.5 - Math.random());
-
-    return NextResponse.json(
-        { items: shuffled },
-        {
-            headers: {
-                "Cache-Control": "s-maxage=60, stale-while-revalidate=300",
-            },
-            status: 200,
-        }
-    );
 }

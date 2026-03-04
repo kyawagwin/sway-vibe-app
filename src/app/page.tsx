@@ -21,7 +21,11 @@ export default function Home() {
     isOffline,
   } = useSwayState();
 
-  const [temperature] = useState(() => Math.round(Math.random() * 30 + 50));
+  const [temperature, setTemperature] = useState(65);
+
+  useEffect(() => {
+    setTemperature(Math.round(Math.random() * 30 + 50));
+  }, []);
 
   return (
     <main className="relative min-h-screen w-full overflow-hidden text-slate-900 font-sans">

@@ -43,7 +43,7 @@ export function HeroCard({ data, onSwipe, index }: HeroCardProps) {
 
     return (
         <motion.div
-            className="absolute inset-0 flex items-center justify-center p-6 w-full max-w-[450px] mx-auto z-30"
+            className="absolute inset-0 flex items-center justify-center p-4 w-full max-w-[420px] mx-auto z-30"
             style={{
                 zIndex: 100 - index, // Ensure current card is on top
             }}
@@ -58,37 +58,38 @@ export function HeroCard({ data, onSwipe, index }: HeroCardProps) {
                 whileInView={{ scale: 1, y: 0, opacity: 1 }}
                 style={{ x, rotate, opacity }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                className="relative w-full aspect-[4/5] max-h-[750px] bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[20px] shadow-2xl overflow-hidden flex flex-col"
+                className="relative w-full h-[75vh] min-h-[500px] max-h-[700px] bg-white/10 backdrop-blur-2xl border border-white/20 rounded-[24px] shadow-2xl overflow-hidden flex flex-col"
             >
-                {/* Top 60%: Image Area */}
-                <div className="relative h-[65%] w-full">
+                {/* Top 55%: Image Area */}
+                <div className="relative h-[55%] w-full shrink-0">
                     <Image
                         src={data.imageUrl}
                         alt={data.headline}
                         fill
                         className="absolute inset-0 w-full h-full object-cover"
                         draggable={false} // Prevent native drag
-                        sizes="(max-width: 768px) 100vw, 450px"
+                        sizes="(max-width: 768px) 100vw, 420px"
+                        priority
                     />
                     {/* Soft vignette gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none" />
                 </div>
 
-                {/* Bottom 40%: Narrative Area */}
-                <div className="flex-1 flex flex-col justify-between p-6 -mt-8 relative z-10">
-                    <div>
-                        <h2 className="text-white text-2xl font-bold tracking-tight mb-2 drop-shadow-md pb-4 border-b border-white/10" style={{ fontFamily: "Montserrat, sans-serif" }}>
+                {/* Bottom 45%: Narrative Area */}
+                <div className="flex-1 flex flex-col p-6 -mt-8 relative z-10">
+                    <div className="flex-1 overflow-y-auto no-scrollbar pb-2">
+                        <h2 className="text-white text-2xl sm:text-3xl font-bold tracking-tight mb-2 drop-shadow-md pb-3 border-b border-white/10" style={{ fontFamily: "Montserrat, sans-serif" }}>
                             {data.headline}
                         </h2>
-                        <p className="text-white/90 text-[18px] leading-relaxed font-serif mt-4 drop-shadow-sm h-[400]" style={{ fontFamily: "Merriweather, serif" }}>
+                        <p className="text-white/90 text-[16px] sm:text-[18px] leading-relaxed font-serif mt-3 drop-shadow-sm" style={{ fontFamily: "Merriweather, serif" }}>
                             {data.pitch}
                         </p>
                     </div>
 
-                    <div className="flex justify-center mt-6">
-                        <button className="flex items-center gap-2 px-6 py-3 bg-white/90 hover:bg-white text-slate-900 rounded-full shadow-lg transition-transform transform active:scale-95 duration-200">
-                            <Navigation className="w-4 h-4" />
-                            <span className="font-semibold text-sm">Sway Now</span>
+                    <div className="flex justify-center mt-4 shrink-0">
+                        <button className="flex items-center gap-2 px-8 py-3.5 bg-white/90 hover:bg-white text-slate-900 rounded-full shadow-lg transition-transform transform active:scale-95 duration-200">
+                            <Navigation className="w-5 h-5" />
+                            <span className="font-semibold text-sm tracking-wide">SWAY NOW</span>
                         </button>
                     </div>
                 </div>
