@@ -6,11 +6,20 @@ import { AtmosphericHeader } from "@/components/ui/AtmosphericHeader";
 import { HeroCard, HeroCardData } from "@/components/ui/HeroCard";
 import { PulseLoader } from "@/components/ui/PulseLoader";
 import { OfflineFallbackCard } from "@/components/ui/OfflineFallbackCard";
-import { VaultOverlay } from "@/components/ui/VaultOverlay";
-import { ZenWalkOverlay } from "@/components/ui/ZenWalkOverlay";
 import { useSwayState } from "@/hooks/useSwayState";
 import { useSwayVault } from "@/hooks/useSwayVault";
 import { motion, AnimatePresence } from "framer-motion";
+import dynamic from "next/dynamic";
+
+const VaultOverlay = dynamic(
+  () => import("@/components/ui/VaultOverlay").then((mod) => mod.VaultOverlay),
+  { ssr: false }
+);
+
+const ZenWalkOverlay = dynamic(
+  () => import("@/components/ui/ZenWalkOverlay").then((mod) => mod.ZenWalkOverlay),
+  { ssr: false }
+);
 
 export default function Home() {
   const {

@@ -12,6 +12,7 @@ export function useSwayState() {
     const [temperature, setTemperature] = useState<number>(65);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [coords, setCoords] = useState<{ lat: number, lng: number } | null>(null);
+    const [isWeatherResolved, setIsWeatherResolved] = useState<boolean>(false);
 
     useEffect(() => {
         if ("geolocation" in navigator) {
@@ -31,12 +32,17 @@ export function useSwayState() {
                         }
                     } catch (e) {
                         console.error("Failed to fetch real weather:", e);
+                    } finally {
+                        setIsWeatherResolved(true);
                     }
                 },
                 (error) => {
                     console.warn("Geolocation denied or error:", error);
+                    setIsWeatherResolved(true);
                 }
             );
+        } else {
+            setIsWeatherResolved(true);
         }
     }, []);
 
@@ -47,11 +53,11 @@ export function useSwayState() {
     }
 
     const { data, error, isLoading, isValidating } = useSWR<{ items: HeroCardData[] }>(
-        `/api/sway/vibe?${params.toString()}`,
+        isWeatherResolved ? `/api/sway/vibe?${params.toString()}` : null,
         fetcher,
         {
             revalidateOnFocus: false, // Don't trigger harsh reloads on tab focus
-            keepPreviousData: false,   // We want strict loading states on vibe change
+            keepPreviousData: true,   // Keep previous data to prevent layout shift during vibe change
         }
     );
 
