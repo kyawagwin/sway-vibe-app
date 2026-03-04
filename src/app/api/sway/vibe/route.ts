@@ -66,15 +66,20 @@ export async function GET(request: Request) {
         };
 
         if (lat && lng) {
-            placesReqBody.locationBias = {
-                circle: {
-                    center: {
-                        latitude: parseFloat(lat),
-                        longitude: parseFloat(lng)
-                    },
-                    radius: 20000.0 // 20km radius
-                }
-            };
+            const latNum = parseFloat(lat);
+            const lngNum = parseFloat(lng);
+
+            if (!isNaN(latNum) && !isNaN(lngNum)) {
+                placesReqBody.locationBias = {
+                    circle: {
+                        center: {
+                            latitude: latNum,
+                            longitude: lngNum
+                        },
+                        radius: 20000.0 // 20km radius
+                    }
+                };
+            }
         }
 
         const placesRes = await fetch("https://places.googleapis.com/v1/places:searchText", {
@@ -107,7 +112,7 @@ export async function GET(request: Request) {
             headline: place.displayName.text,
             // Point to our secure proxy endpoint instead of leaking the API key
             imageUrl: `/api/sway/image?name=${encodeURIComponent(place.photos![0].name)}`,
-            imageUrls: place.photos!.slice(0, 5).map((photo: any) => `/api/sway/image?name=${encodeURIComponent(photo.name)}`),
+            imageUrls: place.photos!.slice(0, 5).map((photo: { name: string }) => `/api/sway/image?name=${encodeURIComponent(photo.name)}`),
             rating: place.rating,
             isOpen: place.regularOpeningHours?.openNow,
             pitch: "", // to be generated

@@ -56,7 +56,7 @@ export default function Home() {
     // Check if this is the user's first time on mount
     const hasSeenTutorial = localStorage.getItem('sway_tutorial_seen');
     if (!hasSeenTutorial) {
-      setShowTutorial(true);
+      setTimeout(() => setShowTutorial(true), 0);
       localStorage.setItem('sway_tutorial_seen', 'true');
     }
   }, []);

@@ -13,8 +13,15 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: "Missing coordinates" }, { status: 400 });
         }
 
+        const latNum = parseFloat(lat);
+        const lngNum = parseFloat(lng);
+
+        if (isNaN(latNum) || isNaN(lngNum)) {
+            return NextResponse.json({ error: "Invalid coordinates format" }, { status: 400 });
+        }
+
         const apiKey = process.env.OPENWEATHERMAP_API_KEY;
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&units=imperial&appid=${apiKey}`);
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${latNum}&lon=${lngNum}&units=imperial&appid=${apiKey}`);
 
         if (!res.ok) {
             throw new Error(`OpenWeatherMap error: ${res.status}`);

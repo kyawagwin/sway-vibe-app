@@ -9,8 +9,14 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const name = searchParams.get("name");
 
-        if (!name) {
-            return new NextResponse("Missing photo name", { status: 400 });
+        if (!name || typeof name !== 'string') {
+            return new NextResponse("Missing or invalid photo name", { status: 400 });
+        }
+
+        // SSRF protection: Ensure the name parameter follows the expected Google Places photo reference format
+        // and doesn't contain path traversal characters.
+        if (!name.startsWith("places/") || name.includes("..") || name.includes("://")) {
+            return new NextResponse("Invalid photo reference format", { status: 400 });
         }
 
         // Construct the Google Places Media endpoint URL
