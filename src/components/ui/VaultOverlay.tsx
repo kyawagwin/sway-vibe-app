@@ -21,7 +21,7 @@ export function VaultOverlay({ isOpen, onClose, savedItems, onRemoveItem }: Vaul
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: "100%" }}
                     transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                    className="fixed inset-0 z-50 flex flex-col bg-slate-900/95 backdrop-blur-3xl text-white overflow-hidden"
+                    className="fixed inset-0 z-[999] flex flex-col bg-slate-900/95 backdrop-blur-3xl text-white overflow-hidden"
                 >
                     {/* Header */}
                     <div className="flex items-center justify-between p-6 border-b border-white/10 shrink-0 mt-8">

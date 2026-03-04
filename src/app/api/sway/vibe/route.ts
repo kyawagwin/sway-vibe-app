@@ -36,6 +36,8 @@ interface GooglePlace {
     displayName: { text: string };
     photos?: { name: string }[];
     location?: { latitude: number; longitude: number };
+    rating?: number;
+    regularOpeningHours?: { openNow?: boolean };
 }
 
 interface GeminiPitch {
@@ -79,7 +81,7 @@ export async function GET(request: Request) {
             method: "POST",
             headers: {
                 "X-Goog-Api-Key": PLACES_API_KEY,
-                "X-Goog-FieldMask": "places.id,places.displayName,places.photos,places.location",
+                "X-Goog-FieldMask": "places.id,places.displayName,places.photos,places.location,places.rating,places.regularOpeningHours",
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(placesReqBody)
@@ -105,6 +107,9 @@ export async function GET(request: Request) {
             headline: place.displayName.text,
             // Point to our secure proxy endpoint instead of leaking the API key
             imageUrl: `/api/sway/image?name=${encodeURIComponent(place.photos![0].name)}`,
+            imageUrls: place.photos!.slice(0, 5).map((photo: any) => `/api/sway/image?name=${encodeURIComponent(photo.name)}`),
+            rating: place.rating,
+            isOpen: place.regularOpeningHours?.openNow,
             pitch: "", // to be generated
             targetLat: place.location!.latitude,
             targetLng: place.location!.longitude

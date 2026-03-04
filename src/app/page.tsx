@@ -16,6 +16,7 @@ export default function Home() {
   const {
     vibe,
     weatherState,
+    temperature,
     handleVibeChange,
     cycleWeather,
     currentItem,
@@ -34,14 +35,7 @@ export default function Home() {
     hasNewItem
   } = useSwayVault();
 
-  const [temperature, setTemperature] = useState(65);
   const [zenWalkItem, setZenWalkItem] = useState<HeroCardData | null>(null);
-
-  useEffect(() => {
-    setTimeout(() => {
-      setTemperature(Math.round(Math.random() * 30 + 50));
-    }, 0);
-  }, []);
 
   return (
     <main className="relative min-h-screen w-full overflow-hidden text-slate-900 font-sans">

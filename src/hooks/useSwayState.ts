@@ -9,17 +9,29 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 export function useSwayState() {
     const [vibe, setVibe] = useState<VibeType>("Solo");
     const [weatherState, setWeatherState] = useState<WeatherState>("Clear");
+    const [temperature, setTemperature] = useState<number>(65);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [coords, setCoords] = useState<{ lat: number, lng: number } | null>(null);
 
     useEffect(() => {
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    setCoords({
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    });
+                async (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    setCoords({ lat, lng });
+
+                    // Fetch real weather
+                    try {
+                        const weatherRes = await fetch(`/api/sway/weather?lat=${lat}&lng=${lng}`);
+                        if (weatherRes.ok) {
+                            const data = await weatherRes.json();
+                            if (data.temperature) setTemperature(data.temperature);
+                            if (data.weatherState) setWeatherState(data.weatherState);
+                        }
+                    } catch (e) {
+                        console.error("Failed to fetch real weather:", e);
+                    }
                 },
                 (error) => {
                     console.warn("Geolocation denied or error:", error);
@@ -65,6 +77,7 @@ export function useSwayState() {
     return {
         vibe,
         weatherState,
+        temperature,
         handleVibeChange,
         cycleWeather,
         currentItem: data?.items ? data.items[currentIndex] : null,

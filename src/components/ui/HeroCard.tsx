@@ -1,16 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { motion, useMotionValue, useTransform, useAnimation, PanInfo } from "framer-motion";
-import { Navigation, Heart, X, Compass } from "lucide-react";
+import { Navigation, Heart, X, Compass, Star, Clock, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 
 export interface HeroCardData {
     id: string;
     imageUrl: string;
+    imageUrls?: string[];
     headline: string;
     pitch: string;
     targetLat: number;
     targetLng: number;
+    rating?: number;
+    isOpen?: boolean;
 }
 
 interface HeroCardProps {
@@ -23,6 +27,19 @@ interface HeroCardProps {
 export function HeroCard({ data, onSwipe, onZenWalk, index }: HeroCardProps) {
     const x = useMotionValue(0);
     const controls = useAnimation();
+
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const photos = data.imageUrls && data.imageUrls.length > 0 ? data.imageUrls : [data.imageUrl];
+
+    const nextImage = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setCurrentImageIndex((prev) => (prev + 1) % photos.length);
+    };
+
+    const prevImage = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setCurrentImageIndex((prev) => (prev - 1 + photos.length) % photos.length);
+    };
 
     // Physics mapping
     const rotate = useTransform(x, [-200, 200], [-10, 10]);
@@ -87,16 +104,52 @@ export function HeroCard({ data, onSwipe, onZenWalk, index }: HeroCardProps) {
                 </motion.div>
 
                 {/* Top 55%: Image Area */}
-                <div className="relative h-[55%] w-full shrink-0">
+                <div className="relative h-[55%] w-full shrink-0 group">
                     <Image
-                        src={data.imageUrl}
-                        alt={data.headline}
+                        src={photos[currentImageIndex]}
+                        alt={`${data.headline} photo ${currentImageIndex + 1}`}
                         fill
-                        className="absolute inset-0 w-full h-full object-cover"
+                        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
                         draggable={false} // Prevent native drag
                         sizes="(max-width: 768px) 100vw, 420px"
-                        priority
+                        priority={currentImageIndex === 0}
                     />
+
+                    {/* Image Navigation Controls */}
+                    {photos.length > 1 && (
+                        <>
+                            {/* Left tap zone */}
+                            <div
+                                className="absolute top-0 left-0 w-1/4 h-full z-10 cursor-pointer flex items-center justify-start px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={prevImage}
+                            >
+                                <div className="p-1 bg-black/40 rounded-full text-white backdrop-blur-md">
+                                    <ChevronLeft className="w-5 h-5" />
+                                </div>
+                            </div>
+
+                            {/* Right tap zone */}
+                            <div
+                                className="absolute top-0 right-0 w-1/4 h-full z-10 cursor-pointer flex items-center justify-end px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={nextImage}
+                            >
+                                <div className="p-1 bg-black/40 rounded-full text-white backdrop-blur-md">
+                                    <ChevronRight className="w-5 h-5" />
+                                </div>
+                            </div>
+
+                            {/* Dot Indicators */}
+                            <div className="absolute top-3 left-0 right-0 flex justify-center gap-1 z-10">
+                                {photos.map((_, i) => (
+                                    <div
+                                        key={i}
+                                        className={`h-1 rounded-full transition-all duration-300 ${i === currentImageIndex ? 'w-4 bg-white shadow-sm' : 'w-1.5 bg-white/50'}`}
+                                    />
+                                ))}
+                            </div>
+                        </>
+                    )}
+
                     {/* Soft vignette gradient */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none" />
                 </div>
@@ -104,10 +157,30 @@ export function HeroCard({ data, onSwipe, onZenWalk, index }: HeroCardProps) {
                 {/* Bottom 45%: Narrative Area */}
                 <div className="flex-1 flex flex-col p-6 -mt-8 relative z-10">
                     <div className="flex-1 overflow-y-auto no-scrollbar pb-2">
-                        <h2 className="text-white text-2xl sm:text-3xl font-bold tracking-tight mb-2 drop-shadow-md pt-4 pb-3 border-b border-white/10" style={{ fontFamily: "Montserrat, sans-serif" }}>
+                        <h2 className="text-white text-2xl sm:text-3xl font-bold tracking-tight mb-2 drop-shadow-md pt-4" style={{ fontFamily: "Montserrat, sans-serif" }}>
                             {data.headline}
                         </h2>
-                        <p className="text-white/90 text-[16px] sm:text-[18px] leading-relaxed font-serif mt-3 drop-shadow-sm" style={{ fontFamily: "Merriweather, serif" }}>
+
+                        {/* Meta info block */}
+                        {(data.rating !== undefined || data.isOpen !== undefined) && (
+                            <div className="flex items-center gap-4 mb-3 pb-3 border-b border-white/10 text-sm font-medium">
+                                {data.rating !== undefined && (
+                                    <div className="flex items-center gap-1 text-yellow-400">
+                                        <Star className="w-4 h-4 fill-current" />
+                                        <span className="text-white/90">{data.rating.toFixed(1)}</span>
+                                    </div>
+                                )}
+                                {data.isOpen !== undefined && (
+                                    <div className={`flex items-center gap-1.5 ${data.isOpen ? 'text-green-400' : 'text-red-400'}`}>
+                                        <Clock className="w-4 h-4" />
+                                        <span className="text-white/90">{data.isOpen ? 'Open Now' : 'Closed'}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        {!data.rating && !data.isOpen && <div className="border-b border-white/10 mb-3" />}
+
+                        <p className="text-white/90 text-[16px] sm:text-[18px] leading-relaxed font-serif mt-2 drop-shadow-sm" style={{ fontFamily: "Merriweather, serif" }}>
                             {data.pitch}
                         </p>
                     </div>
