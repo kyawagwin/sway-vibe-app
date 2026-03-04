@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { LiquidBackground } from "@/components/ui/LiquidBackground";
 import { AtmosphericHeader } from "@/components/ui/AtmosphericHeader";
 import { HeroCard } from "@/components/ui/HeroCard";
@@ -20,6 +21,8 @@ export default function Home() {
     isOffline,
   } = useSwayState();
 
+  const [temperature] = useState(() => Math.round(Math.random() * 30 + 50));
+
   return (
     <main className="relative min-h-screen w-full overflow-hidden text-slate-900 font-sans">
       {/* 1. Underlying Liquid Morph Background */}
@@ -28,7 +31,7 @@ export default function Home() {
       {/* 2. Glass Header layer */}
       <AtmosphericHeader
         weatherState={weatherState}
-        temperature={Math.random() * 30 + 50} // Mock temperature between 50 and 80
+        temperature={temperature} // Mock temperature now handled purely via state
         currentVibe={vibe}
         onVibeChange={handleVibeChange}
       />

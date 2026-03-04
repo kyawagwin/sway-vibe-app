@@ -1,7 +1,8 @@
 "use client";
 
-import { motion, useMotionValue, useTransform, useAnimation } from "framer-motion";
-import { MapPin, Navigation } from "lucide-react";
+import { motion, useMotionValue, useTransform, useAnimation, PanInfo } from "framer-motion";
+import { Navigation } from "lucide-react";
+import Image from "next/image";
 
 export interface HeroCardData {
     id: string;
@@ -24,7 +25,7 @@ export function HeroCard({ data, onSwipe, index }: HeroCardProps) {
     const rotate = useTransform(x, [-200, 200], [-10, 10]);
     const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
 
-    const handleDragEnd = async (e: any, { offset, velocity }: any) => {
+    const handleDragEnd = async (_: MouseEvent | TouchEvent | PointerEvent, { offset, velocity }: PanInfo) => {
         const swipeThreshold = 100;
 
         // Determine if it was a valid swipe
@@ -61,11 +62,13 @@ export function HeroCard({ data, onSwipe, index }: HeroCardProps) {
             >
                 {/* Top 60%: Image Area */}
                 <div className="relative h-[65%] w-full">
-                    <img
+                    <Image
                         src={data.imageUrl}
                         alt={data.headline}
+                        fill
                         className="absolute inset-0 w-full h-full object-cover"
-                        draggable="false" // Prevent native drag
+                        draggable={false} // Prevent native drag
+                        sizes="(max-width: 768px) 100vw, 450px"
                     />
                     {/* Soft vignette gradient */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />

@@ -25,7 +25,7 @@ export function useSwayState() {
         setCurrentIndex(0); // Reset stack on vibe change
     }, []);
 
-    const handleSwipe = useCallback((direction: "left" | "right") => {
+    const handleSwipe = useCallback((_direction: "left" | "right") => {
         if (data?.items) {
             // Cycle through the items
             setCurrentIndex((prev) => (prev + 1) % data.items.length);
