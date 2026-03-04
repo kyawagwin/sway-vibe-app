@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LiquidBackground } from "@/components/ui/LiquidBackground";
 import { AtmosphericHeader } from "@/components/ui/AtmosphericHeader";
 import { HeroCard } from "@/components/ui/HeroCard";
@@ -33,7 +33,11 @@ export default function Home() {
     hasNewItem
   } = useSwayVault();
 
-  const [temperature] = useState(() => Math.round(Math.random() * 30 + 50));
+  const [temperature, setTemperature] = useState(65);
+
+  useEffect(() => {
+    setTemperature(Math.round(Math.random() * 30 + 50));
+  }, []);
 
   return (
     <main className="relative min-h-screen w-full overflow-hidden text-slate-900 font-sans">

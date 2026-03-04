@@ -101,7 +101,7 @@ export function HeroCard({ data, onSwipe, index }: HeroCardProps) {
                 {/* Bottom 45%: Narrative Area */}
                 <div className="flex-1 flex flex-col p-6 -mt-8 relative z-10">
                     <div className="flex-1 overflow-y-auto no-scrollbar pb-2">
-                        <h2 className="text-white text-2xl sm:text-3xl font-bold tracking-tight mb-2 drop-shadow-md pb-3 border-b border-white/10" style={{ fontFamily: "Montserrat, sans-serif" }}>
+                        <h2 className="text-white text-2xl sm:text-3xl font-bold tracking-tight mb-2 drop-shadow-md pt-4 pb-3 border-b border-white/10" style={{ fontFamily: "Montserrat, sans-serif" }}>
                             {data.headline}
                         </h2>
                         <p className="text-white/90 text-[16px] sm:text-[18px] leading-relaxed font-serif mt-3 drop-shadow-sm" style={{ fontFamily: "Merriweather, serif" }}>
