@@ -49,16 +49,18 @@ export function HeroCard({ data, onSwipe, onZenWalk, index }: HeroCardProps) {
     const saveOpacity = useTransform(x, [0, 100], [0, 1]);
     const discardOpacity = useTransform(x, [0, -100], [0, 1]);
 
-    const handleDragEnd = async (_: MouseEvent | TouchEvent | PointerEvent, { offset, velocity }: PanInfo) => {
-        const swipeThreshold = 100;
+    const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, { offset, velocity }: PanInfo) => {
+        const swipeThreshold = 80;
 
         // Determine if it was a valid swipe
-        if (offset.x > swipeThreshold || velocity.x > 500) {
-            await controls.start({ x: 500, opacity: 0, transition: { duration: 0.3 } });
-            onSwipe("right", data);
-        } else if (offset.x < -swipeThreshold || velocity.x < -500) {
-            await controls.start({ x: -500, opacity: 0, transition: { duration: 0.3 } });
-            onSwipe("left", data);
+        if (offset.x > swipeThreshold || velocity.x > 300) {
+            controls.start({ x: 500, opacity: 0, transition: { duration: 0.25 } }).then(() => {
+                onSwipe("right", data);
+            });
+        } else if (offset.x < -swipeThreshold || velocity.x < -300) {
+            controls.start({ x: -500, opacity: 0, transition: { duration: 0.25 } }).then(() => {
+                onSwipe("left", data);
+            });
         } else {
             // Snap back if not swiped far enough
             controls.start({ x: 0, rotate: 0, transition: { type: "spring", stiffness: 300, damping: 20 } });

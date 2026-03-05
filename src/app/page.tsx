@@ -35,6 +35,7 @@ export default function Home() {
     cycleWeather,
     currentItem,
     handleSwipe,
+    swipeCount,
     isLoading,
     isOffline,
   } = useSwayState();
@@ -78,9 +79,9 @@ export default function Home() {
       />
 
       {/* 3. Content Layer (Cards, Loaders, Offline Fallback) */}
-      <div className="relative pt-24 h-screen w-full flex items-center justify-center pointer-events-none">
+      <div className="relative pt-24 h-screen w-full flex items-center justify-center pointer-events-none" style={{ touchAction: "pan-y" }}>
         {/* pointer-events-auto re-enables interaction only on the card area */}
-        <div className="relative w-full h-full max-h-[800px] pointer-events-auto">
+        <div className="relative w-full h-full max-h-[800px] pointer-events-auto" style={{ touchAction: "pan-y" }}>
           <AnimatePresence mode="wait">
             {isOffline ? (
               <motion.div
@@ -102,7 +103,7 @@ export default function Home() {
               </motion.div>
             ) : (
               <HeroCard
-                key={currentItem.id} // Re-render animation when item swaps
+                key={`${currentItem.id}-${swipeCount}`} // Force remount even if single item circles back
                 data={currentItem}
                 index={0}
                 onSwipe={(direction, item) => {

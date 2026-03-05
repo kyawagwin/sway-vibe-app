@@ -11,6 +11,7 @@ export function useSwayState() {
     const [weatherState, setWeatherState] = useState<WeatherState>("Clear");
     const [temperature, setTemperature] = useState<number>(65);
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [swipeCount, setSwipeCount] = useState(0);
     const [coords, setCoords] = useState<{ lat: number, lng: number } | null>(null);
     const [isWeatherResolved, setIsWeatherResolved] = useState<boolean>(false);
 
@@ -70,6 +71,7 @@ export function useSwayState() {
         if (data?.items) {
             // Cycle through the items
             setCurrentIndex((prev) => (prev + 1) % data.items.length);
+            setSwipeCount((prev) => prev + 1);
         }
     }, [data]);
 
@@ -89,6 +91,7 @@ export function useSwayState() {
         currentItem: data?.items ? data.items[currentIndex] : null,
         nextItem: data?.items ? data.items[(currentIndex + 1) % data.items.length] : null,
         handleSwipe,
+        swipeCount,
         isLoading: isLoading || isValidating,
         isOffline: !!error,
     };
